@@ -1,0 +1,4 @@
+body { font-family: Arial; background: #f4f4f4; margin:0; padding:32px; }
+#board { margin: 32px 0; }
+#analysis { margin: 16px 0; font-size: 1.2em; }
+#move-icons img { margin: 2px; }

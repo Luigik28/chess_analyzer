@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chess Analyzer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/chessboard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
+</head>
+<body>
+    <h1>Chess Analyzer</h1>
+    <input type="text" id="username" placeholder="Chess.com Username">
+    <button onclick="loadGames()">Carica Partite</button>
+    <div id="games"></div>
+    <div id="board" style="width: 400px"></div>
+    <div id="analysis"></div>
+    <button onclick="prevMove()">Indietro</button>
+    <button onclick="nextMove()">Avanti</button>
+    <div id="move-icons"></div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
