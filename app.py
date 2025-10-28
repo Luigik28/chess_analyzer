@@ -4,13 +4,18 @@ import requests
 import os
 
 app = Flask(__name__)
-stockfish = Stockfish(path="stockfish/stockfish")
+stockfish = Stockfish(path="stockfish/stockfish_win.exe")
 
 def fetch_chess_games(username, year=None, month=None):
+    headers = {
+    'User-Agent': 'Chess Game Analyzer/1.0 Contact: your-email@example.com'
+    }
     url = f"https://api.chess.com/pub/player/{username}/games"
     if year and month:
         url += f"/{year}/{month:02d}"
-    resp = requests.get(url)
+    else:
+        url += "/2025/10"
+    resp = requests.get(url, headers=headers)
     resp.raise_for_status()
     return resp.json()["games"]
 
