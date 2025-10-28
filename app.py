@@ -4,7 +4,7 @@ import requests
 import os
 
 app = Flask(__name__)
-stockfish = Stockfish(path="/app/stockfish")
+stockfish = Stockfish(path="/stockfish")
 
 def fetch_chess_games(username, year=None, month=None):
     url = f"https://api.chess.com/pub/player/{username}/games"
