@@ -78,5 +78,8 @@ function showAnalysis() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    board = Chessboard('board', 'start');
+    //board = Chessboard('board', 'start');
+    board = Chessboard('board', {
+        pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png'
+    });
 });

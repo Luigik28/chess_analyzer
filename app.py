@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from stockfish import Stockfish
 import requests
 import os
@@ -51,6 +51,8 @@ def api_games(username):
 @app.route("/api/analyze", methods=["POST"])
 def api_analyze():
     data = request.json
+    if not data or "fen" not in data or "move" not in data:
+        return jsonify({"error": "Invalid input"}), 400
     fen = data["fen"]
     move = data["move"]
     prev_eval = data.get("prev_eval")
@@ -65,3 +67,7 @@ def api_analyze():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+
+@app.route('/img/<path:filename>')
+def custom_static(filename):
+    return send_from_directory('img', filename)
