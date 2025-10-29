@@ -10,11 +10,11 @@ function loadGames() {
     fetch(`/api/games/${username}`)
         .then(resp => resp.json())
         .then(games => {
-            let html = "<select id='gameSelect'>";
+            let html = '<select id="gameSelect">';
             games.forEach((g, i) => {
                 html += `<option value="${i}">VS ${g.white.username} - ${g.black.username} (${g.end_time})</option>`;
             });
-            html += "</select><button onclick='startGame()'>Apri</button>";
+            html += '</select><button onclick="startGame()">Apri</button>';
             document.getElementById('games').innerHTML = html;
         });
 }
@@ -29,7 +29,7 @@ function startGame() {
             game = new Chess();
             game.load_pgn(pgn);
             moves = game.history({ verbose: true });
-            fenList = ["start"];
+            fenList = [];
             let g = new Chess();
             fenList.push(g.fen());
             moves.forEach(m => {
@@ -59,7 +59,6 @@ function showAnalysis() {
         document.getElementById('analysis').innerText = "Partita Iniziata";
         document.getElementById('move-icons').innerHTML = "";
     } else {
-        // Analizza la mossa con backend
         const fen = fenList[currentMove - 1];
         const move = moves[currentMove - 1].san;
         fetch('/api/analyze', {
@@ -71,14 +70,12 @@ function showAnalysis() {
         .then(data => {
             document.getElementById('analysis').innerText =
                 'Mossa: ' + move + ' - Valutazione: ' + data.eval + ' (' + data.category + ')';
-            document.getElementById('move-icons').innerHTML =
-                `<img src='/static/icons/${data.category}.svg' height=24> `;
+            document.getElementById('move-icons').innerHTML = '';
         });
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    //board = Chessboard('board', 'start');
     board = Chessboard('board', {
         pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png'
     });
