@@ -19,6 +19,10 @@ function loadGames() {
         });
 }
 
+function showLoading(show) {
+    document.getElementById('loadingBox').style.display = show ? 'block' : 'none';
+}
+
 function startGame() {
     const select = document.getElementById('gameSelect');
     const idx = select.value;
@@ -37,9 +41,27 @@ function startGame() {
                 fenList.push(g.fen());
             });
             currentMove = 0;
-            board.position(fenList[currentMove]);
-            showAnalysis();
+            showLoading(true); // Mostra loading
+            batchAnalyze()
+                .then(analyses => {
+                    analysisList = analyses;
+                    board.position(fenList[currentMove]);
+                    showAnalysis();
+                    showLoading(false); // Nasconde loading
+                });
         });
+}
+
+function batchAnalyze() {
+    // Prepara la lista di FEN prima di ogni mossa e la lista dei SAN move
+    let batchFens = fenList.slice(0, moves.length);
+    let batchMoves = moves.map(m => m.san);
+    return fetch('/api/analyze_batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ fen_list: batchFens, move_list: batchMoves })
+    })
+    .then(resp => resp.json());
 }
 
 function prevMove() {
@@ -59,19 +81,13 @@ function showAnalysis() {
         document.getElementById('analysis').innerText = "Partita Iniziata";
         document.getElementById('move-icons').innerHTML = "";
     } else {
-        const fen = fenList[currentMove - 1];
-        const move = moves[currentMove - 1].san;
-        fetch('/api/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json'},
-            body: JSON.stringify({ fen: fen, move: move })
-        })
-        .then(resp => resp.json())
-        .then(data => {
-            document.getElementById('analysis').innerText =
-                'Mossa: ' + move + ' - Valutazione: ' + data.eval + ' (' + data.category + ')';
-            document.getElementById('move-icons').innerHTML = '';
-        });
+        // Informazioni già precalcolate
+        const moveIdx = currentMove - 1;
+        const move = moves[moveIdx].san;
+        const data = analysisList[moveIdx];
+        document.getElementById('analysis').innerText =
+            'Mossa: ' + move + ' - Valutazione: ' + data.bar + ' (' + data.category + ')';
+        document.getElementById('move-icons').innerHTML = '';
     }
 }
 
@@ -79,4 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
     board = Chessboard('board', {
         pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png'
     });
+    // Aggiungi box loading in pagina!
+    const loadingBox = document.createElement('div');
+    loadingBox.id = 'loadingBox';
+    loadingBox.innerText = 'Analisi partita in corso...';
+    loadingBox.style = 'display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:#fffd; color:#333; font-size:2em; text-align:center; padding-top:25vh; z-index:1000;';
+    document.body.appendChild(loadingBox);
 });

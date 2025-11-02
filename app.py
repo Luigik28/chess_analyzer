@@ -20,20 +20,32 @@ def fetch_chess_games(username, year=None, month=None):
     resp.raise_for_status()
     return resp.json()["games"]
 
-def analyze_move(fen, move):
-    # Analizza la posizione prima della mossa
-    stockfish.set_fen_position(fen)
-    eval_before_data = stockfish.get_evaluation()
-    eval_before = eval_before_data["value"] if eval_before_data["type"] == "cp" else 0
+def analyze_whole_game(fen_list, move_list):
+    results = []
+    eval = 0
+    for i in range(len(move_list)):
+        fen_before = fen_list[i]
+        ##stockfish.set_fen_position(fen_before)
+        ##eval_before_data = stockfish.get_evaluation()
+        ##eval_before = eval_before_data["value"] if eval_before_data["type"] == "cp" else 0
 
-    # Analizza la posizione dopo la mossa
-    stockfish.set_fen_position(fen)
-    stockfish.make_moves_from_current_position([move])
-    eval_after_data = stockfish.get_evaluation()
-    eval_after = eval_after_data["value"] if eval_after_data["type"] == "cp" else 0
+        move = move_list[i]
+        stockfish.set_fen_position(fen_before)
+        stockfish.make_moves_from_current_position([move])
+        eval_after_data = stockfish.get_evaluation()
+        eval_after = eval_after_data["value"] if eval_after_data["type"] == "cp" else 0
 
-    diff = abs(eval_after - eval_before)
-    return eval_after, diff
+        diff = abs(eval - eval_after)
+        bar = max(min(eval_after, 1000), -1000) / 1000
+        eval = eval_after
+        cat = categorize_move(diff)
+        results.append({
+            "eval": eval_after,
+            "diff": diff,
+            "category": cat,
+            "bar": bar
+        })
+    return results
 
 def categorize_move(eval_diff):
     if eval_diff == 0:
@@ -58,26 +70,21 @@ def api_games(username):
     games = fetch_chess_games(username)
     return jsonify(games)
 
-@app.route("/api/analyze", methods=["POST"])
-def api_analyze():
+@app.route("/api/analyze_batch", methods=["POST"])
+def api_analyze_batch():
     data = request.json
-    if not data or "fen" not in data or "move" not in data:
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    fen_list = data.get("fen_list")
+    move_list = data.get("move_list")
+    if not fen_list or not move_list or len(fen_list) != len(move_list):
         return jsonify({"error": "Invalid input"}), 400
-    fen = data["fen"]
-    move = data["move"]
-    move = data["move"]
-    eval_after, diff = analyze_move(fen, move)
-    category = categorize_move(diff)
-    return jsonify({"eval": eval_after, "category": category})
+    results = analyze_whole_game(fen_list, move_list)
+    return jsonify(results)
 
-# Aggiungi route per favicon se serve
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=True)
-
-@app.route('/img/<path:filename>')
-def custom_static(filename):
-    return send_from_directory('img', filename)
